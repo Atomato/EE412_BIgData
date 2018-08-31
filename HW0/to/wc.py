@@ -7,7 +7,7 @@ sc = SparkContext(conf=conf)
 
 lines = sc.textFile(sys.argv[1])
 
-words = lines.flatMap(lambda l: re.split(r’[^\w]+’, l))
+words = lines.flatMap(lambda l: re.split(r'[^\w]+', l))
 
 pairs = words.map(lambda w: (w, 1))
 
