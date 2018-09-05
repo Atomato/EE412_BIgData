@@ -9,7 +9,7 @@ lines = sc.textFile(sys.argv[1])
 
 words = lines.flatMap(lambda l: re.split(r'[^\w]+', l))
 
-pairs = words.map(lambda w: (w[0], 1))
+pairs = words.map(lambda w: (w, len(w)))
 
 counts = pairs.reduceByKey(lambda n1, n2: n1 + n2)
 
