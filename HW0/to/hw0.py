@@ -8,6 +8,16 @@ def select_alphabet(s):
 	else:
 		return False
 
+def toLowerCase(s):
+	ss = s
+	# Upper case
+	if 64<ord(s[0])<91:
+		if len(s) is 1:
+			ss = chr(ord(s[0])+32)
+		else:
+			ss = chr(ord(s[0])+32) + s[1:]
+	return ss
+
 conf = SparkConf()
 sc = SparkContext(conf=conf)
 
@@ -17,6 +27,7 @@ words = lines.flatMap(lambda l: re.split(r'[^\w]+', l))
 words = words.filter(lambda l: len(l) != 0)
 
 alphabets = words.filter(select_alphabet)
+alphabets = alphabets.map(toLowerCase)
 
 pairs = alphabets.map(lambda w: (w, 1))
 
