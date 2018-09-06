@@ -14,7 +14,7 @@ sc = SparkContext(conf=conf)
 lines = sc.textFile(sys.argv[1])
 
 words = lines.flatMap(lambda l: re.split(r'[^\w]+', l))
-words = words.filter(lambda l: len(l) != 0)
+words = words.filter(lambda l: len(l) != 0) # discard '' key
 
 alphabets = words.filter(select_alphabet)
 alphabets = alphabets.map(lambda l: l.lower())
