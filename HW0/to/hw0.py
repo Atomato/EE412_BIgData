@@ -29,7 +29,7 @@ words = words.filter(lambda l: len(l) != 0)
 alphabets = words.filter(select_alphabet)
 alphabets = alphabets.map(toLowerCase)
 
-pairs = alphabets.map(lambda w: (w, 1))
+pairs = alphabets.map(lambda w: (w[0], 1))
 
 counts = pairs.reduceByKey(lambda n1, n2: n1 + n2)
 
