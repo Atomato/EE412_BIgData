@@ -31,10 +31,12 @@ pseudo_friends = pseudo_friends.union(real_friends)\
 					.filter(lambda l: l[1][1] is False)\
 					.map(lambda l: l[0][0]+'\t'+l[0][1]+'\t'+str(l[1][0]))
 
-print(real_friends.collect())
-for _ in range(3):
-	print('\n')
+pseudo_friends.saveAsTextFile(sys.argv[2])
+sc.stop()
+# print(real_friends.collect())
+# for _ in range(3):
+# 	print('\n')
 
-print(pseudo_friends.collect())
-for _ in range(3):
-	print('\n')
+# print(pseudo_friends.collect())
+# for _ in range(3):
+# 	print('\n')
