@@ -20,15 +20,17 @@ lines = sc.textFile(sys.argv[1])
 tuples = lines.map(lambda l: l.split('\t'))
 tuples = tuples.map(lambda l: (l[0], l[1].split(',')))
 
-real_friends = tuples.flatMap(lambda l: [[l[0], l[1][i]] for i in range(len(l[1]))])
-real_friends = real_friends.map(lambda l: ((l[0], l[1]), True) if l[0]<l[1] \
-					else ((l[1], l[0]), True))
-real_friends = real_friends.reduceByKey(lambda b1, b2: b1 or b2)
+real_friends = tuples.flatMap(lambda l: [[l[0], l[1][i]] for i in range(len(l[1]))])\
+				.map(lambda l: ((l[0], l[1]), True) if l[0]<l[1] else ((l[1], l[0]), True))\
+				.reduceByKey(lambda b1, b2: b1 or b2)
+# real_friends = real_friends.map(lambda l: ((l[0], l[1]), True) if l[0]<l[1] \
+					# else ((l[1], l[0]), True))
+# real_friends = real_friends.reduceByKey(lambda b1, b2: b1 or b2)
 
 pseudo_friends = tuples.flatMap(make_pseudo_friends)
-pseudo_friends = pseudo_friends.union(real_friends)\
-					.reduceByKey(lambda b1, b2: b1 or b2)\
-					.filter(lambda l: l[1] is False)
+# pseudo_friends = pseudo_friends.union(real_friends)\
+# 					.reduceByKey(lambda b1, b2: b1 or b2)\
+# 					.filter(lambda l: l[1] is False)
 
 print(real_friends.collect())
 for _ in range(3):
