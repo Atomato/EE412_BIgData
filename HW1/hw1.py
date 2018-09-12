@@ -26,11 +26,14 @@ real_friends = real_friends.map(lambda l: ((l[0], l[1]), True) if l[0]<l[1] \
 real_friends = real_friends.reduceByKey(lambda b1, b2: b1 or b2)
 
 pseudo_friends = tuples.flatMap(make_pseudo_friends)
+pseudo_friends = pseudo_friends.union(real_friends)\
+					.reduceByKey(lambda b1, b2: b1 or b2)\
+					.filter(lambda l: l[1] is False)
 
-print(pseudo_friends.collect())
+print(real_friends.collect())
 for _ in range(3):
 	print('\n')
 
-print(real_friends.collect())
+print(pseudo_friends.collect())
 for _ in range(3):
 	print('\n')
