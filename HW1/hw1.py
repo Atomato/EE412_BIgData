@@ -28,15 +28,16 @@ real_friends = real_friends.reduceByKey(lambda b1, b2: (b1[0] + b2[0], b1[1] or 
 pseudo_friends = tuples.flatMap(make_pseudo_friends)
 pseudo_friends = pseudo_friends.union(real_friends)\
 					.reduceByKey(lambda b1, b2: (b1[0] + b2[0], b1[1] or b2[1]))\
-					.filter(lambda l: l[1][1] is False)\
-					.map(lambda l: l[0][0]+'\t'+l[0][1]+'\t'+str(l[1][0]))
+					.filter(lambda l: l[1][1] is False)
+					# .map(lambda l: l[0][0]+'\t'+l[0][1]+'\t'+str(l[1][0]))
 
-pseudo_friends.saveAsTextFile(sys.argv[2])
-sc.stop()
-# print(real_friends.collect())
-# for _ in range(3):
-# 	print('\n')
+ordered_output = pseudo_friends.map(lambda l: (l[1][0], (l[0][0], l[0][1])))\
+					.sortByKey(False)\
+					.map(lambda l:(l[1], l[0]))
 
+# pseudo_friends.saveAsTextFile(sys.argv[2])
 # print(pseudo_friends.collect())
-# for _ in range(3):
-# 	print('\n')
+print(ordered_output.collect())
+for _ in range(3):
+	print('\n')
+sc.stop()
