@@ -35,9 +35,14 @@ ordered_output = pseudo_friends.map(lambda l: (l[1][0], (l[0][0], l[0][1])))\
 					.sortByKey(False)\
 					.map(lambda l:(l[1], l[0]))
 
-# pseudo_friends.saveAsTextFile(sys.argv[2])
+				# get the top-10 pairs
+ordered_output = sc.parallelize(ordered_output.take(10))\
+					.map(lambda l: l[0][0]+'\t'+l[0][1]+'\t'+str(l[1]))
+
+ordered_output.saveAsTextFile(sys.argv[2])
 # print(pseudo_friends.collect())
-print(ordered_output.collect())
-for _ in range(3):
-	print('\n')
+# print(ordered_output.collect())
+# for _ in range(3):
+# 	print('\n')
+
 sc.stop()
