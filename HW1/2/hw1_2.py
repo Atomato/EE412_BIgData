@@ -27,8 +27,19 @@ with open(sys.argv[1], 'r') as f:
 			item_counts[item_number] += 1
 ###################################################
 	# between the passes
+	freq_table = [0 for _ in range(N)] # frequent-items table
+	j = 0 # new numbering for frequent items
+	for i in range(N):
+		if item_counts[i] >= 200:
+			j += 1
+			freq_table[i] = j
+	M = j # number of frequent items
+###################################################
+	# second pass	
 	
 
+
+	print('number of frequent items: ' + str(M))
 	print(item[3:])
 	print(prefix_char)
 	print(len(prefix_char))
