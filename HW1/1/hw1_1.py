@@ -15,6 +15,7 @@ def make_pseudo_friends(t):
 
 conf = SparkConf()
 sc = SparkContext(conf=conf)
+sc.setLogLevel('WARN')
 
 lines = sc.textFile(sys.argv[1])
 tuples = lines.map(lambda l: l.split('\t'))
@@ -48,10 +49,10 @@ ordered_output = sc.parallelize(ordered_output.take(10))\
 					.map(lambda l: str(l[0][0])+'\t'+str(l[0][1])+'\t'+str(l[1]))
 					# formatting like <User><TAB><User><TAB><Count>
 
-ordered_output.saveAsTextFile(sys.argv[2])
+# ordered_output.saveAsTextFile(sys.argv[2])
 # print(pseudo_friends.collect())
-# print(ordered_output.collect())
-# for _ in range(3):
-# 	print('\n')
-
+print('Problem 1 output -----------------')
+for s in ordered_output.collect():
+	print(s)
+print('----------------------------------')
 sc.stop()
