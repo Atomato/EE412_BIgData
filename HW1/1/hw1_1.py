@@ -31,13 +31,22 @@ pseudo_friends = pseudo_friends.union(real_friends)\
 					.filter(lambda l: l[1][1] is False)
 					# .map(lambda l: l[0][0]+'\t'+l[0][1]+'\t'+str(l[1][0]))
 
-ordered_output = pseudo_friends.map(lambda l: (l[1][0], (l[0][0], l[0][1])))\
-					.sortByKey(False)\
-					.map(lambda l:(l[1], l[0]))
+					# sort by second user in ascending order
+ordered_output = pseudo_friends.map(lambda l: (int(l[0][1]), (int(l[0][0]), l[1][0])))\
+					.sortByKey(True)					
+					# sort by first user in ascending order
+ordered_output = ordered_output.map(lambda l: (l[1][0], (l[0], l[1][1])))\
+					.sortByKey(True)
+					# sort by number of mutual friends in descending order
+ordered_output = ordered_output.map(lambda l: (l[1][1], (l[0], l[1][0])))\
+					.sortByKey(False)
+					# formatting like -> ((1st user, 2nd user), counts)
+ordered_output = ordered_output.map(lambda l:(l[1], l[0]))
 
-				# get the top-10 pairs
+					# get the top-10 pairs
 ordered_output = sc.parallelize(ordered_output.take(10))\
-					.map(lambda l: l[0][0]+'\t'+l[0][1]+'\t'+str(l[1]))
+					.map(lambda l: str(l[0][0])+'\t'+str(l[0][1])+'\t'+str(l[1]))
+					# formatting like <User><TAB><User><TAB><Count>
 
 ordered_output.saveAsTextFile(sys.argv[2])
 # print(pseudo_friends.collect())
