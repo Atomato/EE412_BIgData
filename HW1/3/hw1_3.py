@@ -58,7 +58,7 @@ with open(sys.argv[1], 'r') as f:
 	n = bands*r # number of minhash signatures, n = br as mentioned in textbook 3.4.3
 
 	# find c to be the smallest prime number larger than or equal to n
-	c = shingle_to_int('zzz') # the number of rows in shingle-set matrix as in Fig 3.4
+	c = shingle_to_int('zzz') + 1 # the number of rows in shingle-set matrix as in Fig 3.4
 	prime = False
 	while True:
 		for i in range(2, c):
@@ -120,4 +120,5 @@ with open(sys.argv[1], 'r') as f:
 
 stop = timeit.default_timer()
 
-print('Run Time: ' + str(stop - start))
+# runtime at my computer was about 60.3412 seconds
+# print('Run Time: ' + str(stop - start))

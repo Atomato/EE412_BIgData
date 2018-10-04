@@ -3,7 +3,8 @@ import sys
 from pyspark import SparkConf, SparkContext
 
 def make_pseudo_friends(t):
-	friends = t[1]
+	# make possible friend pairs from a friends list of each user
+	friends = t[1] # friends list -> [friends]
 	pairs = []
 	for i in range(0, len(friends)):
 		for j in range(i+1, len(friends)):
@@ -17,16 +18,27 @@ conf = SparkConf()
 sc = SparkContext(conf=conf)
 sc.setLogLevel('WARN')
 
-lines = sc.textFile(sys.argv[1])
-tuples = lines.map(lambda l: l.split('\t'))
-tuples = tuples.map(lambda l: (l[0], l[1].split(',')))
+lines = sc.textFile(sys.argv[1]) # read data
+tuples = lines.map(lambda l: l.split('\t')) # split by tab
+tuples = tuples.map(lambda l: (l[0], l[1].split(','))) # map to (user, [friends])
 
+# make pairs of actual friends
 real_friends = tuples.flatMap(lambda l: [[l[0], l[1][i]] for i in range(len(l[1]))])
+# formatting like -> ((user1, user2), (0, True))
+# True means this pair is actual friends
 real_friends = real_friends.map(lambda l: ((l[0], l[1]), (0, True)) if l[0]<l[1] \
 					else ((l[1], l[0]), (0, True)))
+# remove overlapped actual friends by reduce 
 real_friends = real_friends.reduceByKey(lambda b1, b2: (b1[0] + b2[0], b1[1] or b2[1]))
 
+# make possible friend pairs
+# formatting like -> ((user1, user2), (1, False))
+# 1 (fist value) means count of mutual friends
+# False (second value) means this pair may not be actual friends
 pseudo_friends = tuples.flatMap(make_pseudo_friends)
+# union with real friends RDD, and reduce
+# add up count of mutual friends, and or operation for boolean
+# filter for excluding real friends
 pseudo_friends = pseudo_friends.union(real_friends)\
 					.reduceByKey(lambda b1, b2: (b1[0] + b2[0], b1[1] or b2[1]))\
 					.filter(lambda l: l[1][1] is False)
