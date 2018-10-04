@@ -101,7 +101,7 @@ with open(sys.argv[1], 'r') as f:
 
 	L = j # number of frequent pairs
 
-	sorted_pairs = sorted(freq_pairs.items(), key=operator.itemgetter(1))
+	sorted_pairs = sorted(list(freq_pairs.items()), key=operator.itemgetter(1))
 	sorted_pairs.reverse()
 	
 	print('Problem 2 output -----------------')
