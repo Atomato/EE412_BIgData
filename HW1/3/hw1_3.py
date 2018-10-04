@@ -82,26 +82,12 @@ with open(sys.argv[1], 'r') as f:
 	# first index is for article number, second index for signature values
 	sig_table = [[c for _ in range(n)] for _ in range(len(articles))]
 
-	check = False
-
 	# for each article
 	for i in range(len(articles)):
-		if check:
-			print('articles: ' + str(shingles_set[i]))
 		for j in range(n):
-			if check:
-				print(str(j) + 'th signature value')
-				print('a[j]: ' + str(a[j]) + ', b[j]: ' + str(b[j]))
 			# get the 'j'th signature value
 			for shingle in shingles_set[i]:
 				sig_table[i][j] = min((a[j]*shingle + b[j])%c, sig_table[i][j])
-				if check:
-					print(shingle)
-					print(sig_table[i][j])
-		if check:
-			check = False
-
-
 ###################################################
 	# find candidate pairs
 	candidate_pairs = {}
@@ -131,18 +117,6 @@ with open(sys.argv[1], 'r') as f:
 		print(number_to_id[pair[0][0]] + '\t' + number_to_id[pair[0][1]] + \
 					'\t' + str(pair[1]))
 	print('----------------------------------')
-
-	# print('c: ' + str(c))
-	# print('a: ' + str(a))
-	# print(len(candidate_pairs))
-	print('c is ' + str(c))
-	print(len(articles))
-	print(len(similar_pairs))
-	# print(candidate_pairs.keys()[0])
-	# print(sig_table[0])
-	# print(sig_table[1])
-
-
 
 stop = timeit.default_timer()
 
