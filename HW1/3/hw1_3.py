@@ -20,7 +20,7 @@ with open(sys.argv[1], 'r') as f:
 	data = f.readlines()
 ###################################################
 	# numbering each article id and exclude article id
-	id_to_number = {}
+	number_to_id = {}
 	for i in range(len(data)):
 		item = data[i] # for each article
 		article_id = []
@@ -28,7 +28,8 @@ with open(sys.argv[1], 'r') as f:
 			# if first meet 'space'
 			if item[j] == ' ':
 				data[i] = data[i][j+1:] # exclude article id
-				id_to_number[''.join(article_id)] = i # article id to number
+				# id_to_number[''.join(article_id)] = i # article id to number
+				number_to_id[i] = ''.join(article_id) # number to article id
 				break
 			# if not yet meet 'space'
 			article_id.append(item[j])
@@ -40,7 +41,7 @@ with open(sys.argv[1], 'r') as f:
 	# print(articles[0])
 
 	# considering a shingle unit as an alphabetic character within a word (Case 1-A)
-	# articles-shingle pairs set
+	# articles-shingle pairs table
 	shingles_set = [[] for _ in range(len(articles))]
 	for i in range(len(articles)):
 		item = articles[i] # for each article
@@ -57,7 +58,7 @@ with open(sys.argv[1], 'r') as f:
 	n = bands*r # number of minhash signatures, n = br as mentioned in textbook 3.4.3
 
 	# find c to be the smallest prime number larger than or equal to n
-	c = n
+	c = shingle_to_int('zzz') # the number of rows in shingle-set matrix as in Fig 3.4
 	prime = False
 	while True:
 		for i in range(2, c):
@@ -75,15 +76,71 @@ with open(sys.argv[1], 'r') as f:
 	a = [randint(1, c-1) for _ in range(n)]
 	b = [randint(1, c-1) for _ in range(n)]
 ###################################################
-	
+	# get minhash signatures
 
-	print(shingles_set[1])
-	print('c: ' + str(c))
-	print('a: ' + str(a))
-	# for pair in sorted(list(id_to_number.items()), key=operator.itemgetter(1))[:10]:
-	# 	print(pair)
+	# signature matrix
+	# first index is for article number, second index for signature values
+	sig_table = [[c for _ in range(n)] for _ in range(len(articles))]
 
-	# print(len(id_to_number))
+	check = False
+
+	# for each article
+	for i in range(len(articles)):
+		if check:
+			print('articles: ' + str(shingles_set[i]))
+		for j in range(n):
+			if check:
+				print(str(j) + 'th signature value')
+				print('a[j]: ' + str(a[j]) + ', b[j]: ' + str(b[j]))
+			# get the 'j'th signature value
+			for shingle in shingles_set[i]:
+				sig_table[i][j] = min((a[j]*shingle + b[j])%c, sig_table[i][j])
+				if check:
+					print(shingle)
+					print(sig_table[i][j])
+		if check:
+			check = False
+
+
+###################################################
+	# find candidate pairs
+	candidate_pairs = {}
+	for i in range(bands):
+		for j in range(len(articles)):
+			for k in range(j+1, len(articles)):
+				if sig_table[j][i*bands : i*bands+r] == sig_table[k][i*bands : i*bands+r]:
+					candidate_pairs[(j, k)] = 0 # 0 has no meaning
+###################################################
+	# exmaine candidate pair by signature
+	similar_pairs = {}
+	for pair in candidate_pairs:
+		similarity = 0.
+		# for every signature value
+		for i in range(n):
+			if sig_table[pair[0]][i] == sig_table[pair[1]][i]:
+				similarity += 1/float(n)
+		# threshold is 0.9
+		if similarity >= 0.9:
+			similar_pairs[pair] = similarity
+
+	sorted_pairs = sorted(list(similar_pairs.items()), key=operator.itemgetter(1))
+	sorted_pairs.reverse()
+
+	print('Problem 3 output -----------------')
+	for pair in sorted_pairs:
+		print(number_to_id[pair[0][0]] + '\t' + number_to_id[pair[0][1]] + \
+					'\t' + str(pair[1]))
+	print('----------------------------------')
+
+	# print('c: ' + str(c))
+	# print('a: ' + str(a))
+	# print(len(candidate_pairs))
+	print('c is ' + str(c))
+	print(len(articles))
+	print(len(similar_pairs))
+	# print(candidate_pairs.keys()[0])
+	# print(sig_table[0])
+	# print(sig_table[1])
 
 
 
