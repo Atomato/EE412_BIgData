@@ -6,13 +6,23 @@ sc = SparkContext(conf=conf)
 sc.setLogLevel('WARN') # skip terminal log to see output well
 
 lines = sc.textFile(sys.argv[1]) # read graph.txt
-# print(lines.take(1))
 tuples = lines.map(lambda l: l.split('\t')) # split by tab, [src, dst]
-# print(tuples.take(2))
-triples = tuples.map(lambda l: (l[0],(1, l[1]))) # (source, (degree, destination))
+
+# combine duplicated edges
+tuples = tuples.map(lambda l: ((l[0],l[1]), 0))\
+			.reduceByKey(lambda v0, v1: v0+v1)\
+			.map(lambda l: l[0])
+
+triples = tuples.map(lambda l: (l[0], (1, [l[1]]))) # (source, (degree, destination))
 # print(triples.take(2))
-triples = triples.reduceByKey(lambda v1, v2: (v1[0] + v2[0], (v1[1], v2[1])))
-print(triples.take(1))
+
+# calculate the degree of the source
+# (source, (degree, [dst0, dst1, ...]))
+triples = triples.reduceByKey(lambda v0, v1: (v0[0]+v1[0], v0[1]+v1[1]))
+# triples = triples.filter(lambda l: l[0] == u'994')
+# print(triples.collect())
+
+
 
 # 					# get the top-10 pairs
 # ordered_output = sc.parallelize(ordered_output.take(10))\
