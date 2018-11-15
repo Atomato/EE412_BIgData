@@ -19,7 +19,7 @@ triples = tuples.map(lambda l: (l[0], (1, [l[1]]))) # (source, (1, destination))
 # (source, (degree, [dst0, dst1, ...]))
 triples = triples.reduceByKey(lambda v0, v1: (v0[0]+v1[0], v0[1]+v1[1]))
 
-# transition matrix ((source j, destination i)), 1/degree of source (m_ij))
+# transition matrix ((source j, destination i), 1/degree of source (m_ij))
 trans_mat = triples.flatMap(lambda l: [((l[0],l[1][1][i]), 1./l[1][0])\
 								for i in range(len(l[1][1]))])
 
