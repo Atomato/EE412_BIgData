@@ -88,3 +88,8 @@ for cv in range(10):
 print(sum(acc_test)/10)
 print(c)
 print(lr)
+
+# Result
+# 0.834666666667
+# 0.2
+# 0.0005

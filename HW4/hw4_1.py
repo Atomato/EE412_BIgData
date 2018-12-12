@@ -71,3 +71,8 @@ with open(sys.argv[1], 'r') as f, open(sys.argv[2], 'r') as l:
 	print(sum(acc_test)/10)
 	print(c)
 	print(lr)
+
+	# Result
+	# 0.834666666667
+	# 0.2
+	# 0.0005
