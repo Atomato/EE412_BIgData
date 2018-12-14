@@ -50,14 +50,13 @@ for cv in range(10):
 	for k in range(50):
 		cur_time = time.time()
 
-		# ((feature i, label i), y_i * (dot(x_i,w)+b))
-		margin = train.map(lambda pt: (pt, pt[1]*(dot(pt[0], w)+b)))
+		# (feature, label, y(dot(x,w)+b))
+		margin = train.map(lambda (ft, lb): (ft, lb, lb*(dot(ft, w)+b)))
 	
-		# [gradient for w] + [gradient for b]
-		gd = margin.filter(lambda pt: pt[1] < 1) \
-				.map(lambda pt: [-pt[0][1]*pt[0][0][j] for j in range(dim)] \
-																+[-pt[0][1]]) \
-				.reduce(lambda gd0, gd1: [gd0[j] + gd1[j] for j in range(dim+1)])
+		# [gradients for w] + [gradient for b]
+		gd = margin.filter(lambda (ft, lb, margin): margin < 1) \
+			.map(lambda (ft, lb, margin): [-lb*ft[j] for j in range(dim)]+[-lb]) \
+			.reduce(lambda gd0, gd1: [gd0[j] + gd1[j] for j in range(dim+1)])
 		gd = [w[j] + c*gd[j] for j in range(dim)] + [c*gd[dim]]
 		
 		# update
@@ -66,8 +65,8 @@ for cv in range(10):
 
 		# print('iteration', k, '%.3f seconds'%(time.time()-cur_time))
 
-	margin_test = test.map(lambda pt: (pt, pt[1]*(dot(pt[0], w)+b)))
-	temp = margin_test.map(lambda l: 1./test_n if l[1]>0 else 0.) \
+	margin_test = test.map(lambda (ft, lb): lb*(dot(ft, w)+b))
+	temp = margin_test.map(lambda margin: 1./test_n if margin>0 else 0.) \
 					.reduce(lambda a, b: a+b)
 	# print('%d fold test accuracy:'%cv, temp)
 	acc_test.append(temp)
