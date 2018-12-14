@@ -2,6 +2,11 @@ import sys
 from pyspark import SparkConf, SparkContext
 import time
 
+def dot(K, L):
+	if len(K) != len(L):
+		return 0
+	return sum(i[0] * i[1] for i in zip(K, L))
+
 conf = SparkConf()
 sc = SparkContext(conf=conf)
 sc.setLogLevel('WARN') # skip terminal log to see output well
@@ -24,22 +29,16 @@ for cv in range(10):
 	test_f = feat_e[(test_n*cv):(test_n*cv) + test_n] # test features
 	test_l = lb_e[(test_n*cv):(test_n*cv) + test_n] # test labels
 
-	# ((data idx i, dimension idx j), feature[i][j]), remove if feature[i][j] is 0	
-	test = sc.parallelize(range(test_n)) \
-				.flatMap(lambda i: [((i,j), test_f[i][j]) for j in range(dim)]) \
-				.filter(lambda l: l[1] != 0)
+	# (feature i, label i)
+	test = sc.parallelize(range(test_n)).map(lambda i: (test_f[i], test_l[i]))
 
 	feat = feat_e[:]
 	feat[(test_n*cv):(test_n*cv) + test_n] = [] # train features
 	lb = lb_e[:]
 	lb[(test_n*cv):(test_n*cv) + test_n] = [] # train labels	
 
-	# ((data idx i, dimension idx j), feature[i][j]), remove if feature[i][j] is 0
-	train = sc.parallelize(range(N)) \
-				.flatMap(lambda i: [((i,j), feat[i][j]) for j in range(dim)]) \
-				.filter(lambda l: l[1] != 0)
-
-	# print('count', train.count())
+	# (feature i, label i)
+	train = sc.parallelize(range(N)).map(lambda i: (feat[i], lb[i]))
 
 	w = [1./dim for _ in range(dim)]
 	b = -1.
@@ -51,38 +50,26 @@ for cv in range(10):
 	for k in range(50):
 		cur_time = time.time()
 
-		# (data idx i, lb[i]*(dot(feat[i],w)+b))
-		margin = train.map(lambda l: (l[0][0], l[1]*w[l[0][1]])) \
-					.reduceByKey(lambda v0, v1: v0 + v1) \
-					.map(lambda l: (l[0], lb[l[0]]*(l[1]+b)))
-					
-		# (dimension index j, gradient)
-		gd  = margin.filter(lambda l: l[1] < 1) \
-				.flatMap(lambda l: [(j, -lb[l[0]]*feat[l[0]][j]) for j in range(dim)] \
-																	+[(dim, -lb[l[0]])]) \
-				.reduceByKey(lambda v0, v1: v0 + v1) \
-				.map(lambda l: (l[0], w[l[0]] + c*l[1]) if l[0]<dim \
-															else ((l[0], c*l[1]))) 
-		# calculate new w and b
-		w_n = gd.map(lambda l: (l[0], w[l[0]] - lr*l[1]) if l[0]<dim \
-														else ((l[0], b - lr*l[1]))) \
-				.sortByKey(True).map(lambda l: l[1]).collect()
-
-		# update
-		w = w_n[:dim]
-		b = w_n[dim]
-
-		acc = margin.map(lambda l: 1./N if l[1]>0 else 0.) \
-					.reduce(lambda a, b: a+b)
-		print('iteration', k, '%.3f seconds'%(time.time()-cur_time), 'accuracy:', acc)
-
-	margin_test = test.map(lambda l: (l[0][0], l[1]*w[l[0][1]])) \
-					.reduceByKey(lambda v0, v1: v0 + v1) \
-					.map(lambda l: (l[0], test_l[l[0]]*(l[1]+b)))
+		# ((feature i, label i), y_i * (dot(x_i,w)+b))
+		margin = train.map(lambda pt: (pt, pt[1]*(dot(pt[0], w)+b)))
 	
+		# [gradient for w] + [gradient for b]
+		gd = margin.filter(lambda pt: pt[1] < 1) \
+				.map(lambda pt: [-pt[0][1]*pt[0][0][j] for j in range(dim)] \
+																+[-pt[0][1]]) \
+				.reduce(lambda gd0, gd1: [gd0[j] + gd1[j] for j in range(dim+1)])
+		gd = [w[j] + c*gd[j] for j in range(dim)] + [c*gd[dim]]
+		
+		# update
+		w = [w[j] - lr*gd[j] for j in range(dim)]
+		b = b - lr*gd[dim]
+
+		# print('iteration', k, '%.3f seconds'%(time.time()-cur_time))
+
+	margin_test = test.map(lambda pt: (pt, pt[1]*(dot(pt[0], w)+b)))
 	temp = margin_test.map(lambda l: 1./test_n if l[1]>0 else 0.) \
 					.reduce(lambda a, b: a+b)
-	print('%d fold test accuracy:'%cv, temp)
+	# print('%d fold test accuracy:'%cv, temp)
 	acc_test.append(temp)
 
 print(sum(acc_test)/10)
